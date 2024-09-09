@@ -1,5 +1,5 @@
 // تحميل البيانات من ملف JSON
-fetch('azkar.json')
+fetch('azkar-masa.json')
     .then(response => response.json())
     .then(data => {
         // استدعاء الدالة التي تقوم بعرض الأذكار

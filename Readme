@@ -1,0 +1,56 @@
+// Links API \\
+azkar-sabah
+https://api.myjson.online/v1/records/d1ea8c66-d548-4b1e-a78a-83c6b30f99e4
+
+azkar-masa
+https://api.myjson.online/v1/records/f78fe6db-4d24-46af-bb25-3f4d9ca4f38d
+
+
+
+data.data.azkarmasah.map(function (azkar) {
+    console.log(azkar.content);
+});
+
+content.innerHTML = `
+    ${data.data.azkarmasah
+        .map(
+            (azkar) => `
+        <div class="card">
+            <h3>${azkar.content}</h3>
+            <p>${azkar.description}</p>
+            <span>التكرار: ${azkar.count}</span>
+            <span class="count-value">0</span>
+            <button class="increment-btn">أضغط</button>
+            <button class="reset-btn">إعادة</button>
+        </div>`
+        )
+        .join("")}
+`;
+// Add event listeners for buttons after the content is rendered
+const cards = document.querySelectorAll('.card');
+cards.forEach(card => {
+    const countValueElement = card.querySelector('.count-value');
+    const incrementButton = card.querySelector('.increment-btn');
+    const resetButton = card.querySelector('.reset-btn');
+
+    let count = 0;
+    const maxCount = parseInt(card.querySelector('span').textContent.replace('التكرار: ', ''));
+
+    incrementButton.addEventListener('click', () => {
+        if (count < maxCount) {
+            count++;
+            countValueElement.textContent = count;
+            if (count === maxCount) {
+                incrementButton.style.cursor = 'not-allowed';
+                incrementButton.style.opacity = '0.5';
+            }
+        }
+    });
+
+    resetButton.addEventListener('click', () => {
+        count = 0;
+        countValueElement.textContent = count;
+        incrementButton.style.cursor = 'pointer';
+        incrementButton.style.opacity = '1';
+    });
+});

@@ -21,6 +21,16 @@ a {
     cursor: pointer;
 }
 
+main {
+    display: flex;
+    justify-content: space-between !important;
+    flex-direction: column;
+    height: 100vh;
+    
+}
+footer {
+        margin-bottom: 1rem;
+    }
 .container {
     display: flex;
     align-items: center;
@@ -73,7 +83,7 @@ a {
         text-align: center;
     }
 
-    .right-section {
+    .content {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -129,7 +139,7 @@ a {
 
 @media (width < 600px) {
     .container {
-        display: block;
+        width: 98%;
 
         nav {
             flex-direction: column;
@@ -146,8 +156,9 @@ a {
             }
         }
 
-        .right-section {
+        .content {
             .card {
+                width: 90%;
                 span {
                     padding: 5px 1rem;
                     margin-left: .5rem;

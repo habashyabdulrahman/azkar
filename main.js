@@ -1,15 +1,16 @@
-const azkarUrl =
-  "https://api.myjson.online/v1/records/f8fc9e9b-1fef-427b-9886-6f6bd6eeaee1";
+const azkarUrl = "./azkar.json";
 
 async function getAzkarSabah() {
   const content = document.querySelector(".content");
   const res = await fetch(azkarUrl);
   const data = await res.json();
+  console.log(data);
+  
 
-  data.data.azkarsabah.map(function (azkar) {});
+  data.azkarsabah.map(function (azkar) {});
 
   content.innerHTML = `
-    ${data.data.azkarsabah
+    ${data.azkarsabah
       .map(
         (azkar) => `
         <div class="card">
@@ -61,10 +62,10 @@ async function getAzkarMasa() {
   const data = await res.json();
 
 
-    data.data.azkarmasa.map(function (azkar) {});
+    data.azkarmasa.map(function (azkar) {});
 
     content.innerHTML = `
-    ${data.data.azkarmasa
+    ${data.azkarmasa
             .map(
                 (azkar) => `
         <div class="card">

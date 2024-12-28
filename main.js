@@ -5,7 +5,6 @@ async function getAzkarSabah() {
     const content = document.querySelector(".content");
     const res = await fetch(azkarUrl);
     const data = await res.json();
-    console.log(data);
 
     data.azkarsabah.map(function (azkar) { });
 

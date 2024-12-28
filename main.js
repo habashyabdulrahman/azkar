@@ -118,7 +118,7 @@ const now = new Date();
 const morningTime = new Date();
 morningTime.setHours(6, 0, 0, 0); // 6:00 AM
 const eveningTime = new Date();
-eveningTime.setHours(18, 0, 0, 0); // 6:00 PM
+eveningTime.setHours(16, 0, 0, 0); // 6:00 PM
 
 const morningDelay = morningTime - now > 0 ? morningTime - now : morningTime - now + 24 * 60 * 60 * 1000;
 const eveningDelay = eveningTime - now > 0 ? eveningTime - now : eveningTime - now + 24 * 60 * 60 * 1000;

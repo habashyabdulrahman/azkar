@@ -1,55 +1,43 @@
 const azkarUrl = "./azkar.json";
 
+// Azkar Sabah
 async function getAzkarSabah() {
-  const content = document.querySelector(".content");
-  const res = await fetch(azkarUrl);
-  const data = await res.json();
-  console.log(data);
-  
+    const content = document.querySelector(".content");
+    const res = await fetch(azkarUrl);
+    const data = await res.json();
+    console.log(data);
 
-  data.azkarsabah.map(function (azkar) {});
+    data.azkarsabah.map(function (azkar) { });
 
-  content.innerHTML = `
+    content.innerHTML = `
     ${data.azkarsabah
-      .map(
-        (azkar) => `
-        <div class="card">
+            .map(
+                (azkar) => `
+        <div class="card" data-max-count="${azkar.count}">
             <h3>${azkar.content}</h3>
             <p>${azkar.description}</p>
-            <span>التكرار: ${azkar.count}</span>
-            <span class="count-value">0</span>
-            <button class="increment-btn">أضغط</button>
-            <button class="reset-btn">إعادة</button>
+            <button class="increment-btn">${azkar.count}</button>
         </div>`
-      )
-      .join("")}
-`;
-    // Add event listeners for buttons after the content is rendered
+            )
+            .join("")}
+    `;
+    // Add event listeners for cards after the content is rendered
     const cards = document.querySelectorAll('.card');
     cards.forEach(card => {
-        const countValueElement = card.querySelector('.count-value');
         const incrementButton = card.querySelector('.increment-btn');
-        const resetButton = card.querySelector('.reset-btn');
 
-        let count = 0;
-        const maxCount = parseInt(card.querySelector('span').textContent.replace('التكرار: ', ''));
+        let count = parseInt(incrementButton.textContent);
 
-        incrementButton.addEventListener('click', () => {
-            if (count < maxCount) {
-                count++;
-                countValueElement.textContent = count;
-                if (count === maxCount) {
-                    incrementButton.style.cursor = 'not-allowed';
-                    incrementButton.style.opacity = '0.5';
+        card.addEventListener('click', () => {
+            if (count > 0) {
+                count--;
+                incrementButton.textContent = count;
+                incrementButton.style.borderColor = 'rgb(254, 98, 39, 255)';
+                if (count === 0) {
+                    card.style.cursor = 'not-allowed';
+                    card.style.opacity = '0.5';
                 }
             }
-        });
-
-        resetButton.addEventListener('click', () => {
-            count = 0;
-            countValueElement.textContent = count;
-            incrementButton.style.cursor = 'pointer';
-            incrementButton.style.opacity = '1';
         });
     });
 }
@@ -57,56 +45,42 @@ getAzkarSabah();
 
 // Azkar Masah
 async function getAzkarMasa() {
-  const content = document.querySelector(".content");
-  const res = await fetch(azkarUrl);
-  const data = await res.json();
+    const content = document.querySelector(".content");
+    const res = await fetch(azkarUrl);
+    const data = await res.json();
 
-
-    data.azkarmasa.map(function (azkar) {});
+    data.azkarmasa.map(function (azkar) { });
 
     content.innerHTML = `
     ${data.azkarmasa
             .map(
                 (azkar) => `
-        <div class="card">
+        <div class="card" data-max-count="${azkar.count}">
             <h3>${azkar.content}</h3>
             <p>${azkar.description}</p>
-            <span>التكرار: ${azkar.count}</span>
-            <span class="count-value">0</span>
-            <button class="increment-btn">أضغط</button>
-            <button class="reset-btn">إعادة</button>
+            <button class="increment-btn">${azkar.count}</button>
         </div>`
             )
             .join("")}
-`;
-    // Add event listeners for buttons after the content is rendered
+    `;
+    // Add event listeners for cards after the content is rendered
     const cards = document.querySelectorAll('.card');
     cards.forEach(card => {
-        const countValueElement = card.querySelector('.count-value');
         const incrementButton = card.querySelector('.increment-btn');
-        const resetButton = card.querySelector('.reset-btn');
 
-        let count = 0;
-        const maxCount = parseInt(card.querySelector('span').textContent.replace('التكرار: ', ''));
+        let count = parseInt(incrementButton.textContent);
 
-        incrementButton.addEventListener('click', () => {
-            if (count < maxCount) {
-                count++;
-                countValueElement.textContent = count;
-                if (count === maxCount) {
-                    incrementButton.style.cursor = 'not-allowed';
-                    incrementButton.style.opacity = '0.5';
+        card.addEventListener('click', () => {
+            if (count > 0) {
+                count--;
+                incrementButton.textContent = count;
+                incrementButton.style.borderColor = 'rgb(254, 98, 39, 255)';
+                if (count === 0) {
+                    card.style.cursor = 'not-allowed';
+                    card.style.opacity = '0.5';
                 }
             }
         });
-
-        resetButton.addEventListener('click', () => {
-            count = 0;
-            countValueElement.textContent = count;
-            incrementButton.style.cursor = 'pointer';
-            incrementButton.style.opacity = '1';
-        });
     });
-
 }
 getAzkarMasa();

@@ -1,141 +1,212 @@
-const azkarUrl = "./azkar.json";
+class AzkarApp {
+  constructor(dataUrl) {
+    this.dataUrl = dataUrl;
+    this.azkarData = null;
+    this.currentList = [];
+    this.currentIndex = 0;
+    this.currentType = "";
 
-// طلب إذن الإشعارات
-if ('Notification' in window && navigator.serviceWorker) {
-    Notification.requestPermission(status => {
-        console.log('Notification permission status:', status);
+    // متغيرات اللمس
+    this.touchStartX = 0;
+    this.touchEndX = 0;
+    this.minSwipeDistance = 50;
+
+    // عناصر واجهة المستخدم
+    this.DOM = {
+      homeScreen: document.getElementById("home-screen"),
+      azkarScreen: document.getElementById("azkar-screen"),
+      content: document.querySelector(".content"),
+      azkarTitle: document.getElementById("azkar-title"),
+      btnSabah: document.getElementById("btn-sabah"),
+      btnMasa: document.getElementById("btn-masa"),
+      btnBack: document.getElementById("btn-back"),
+    };
+
+    this.initEvents();
+  }
+
+  // تهيئة وجلب البيانات
+  async init() {
+    try {
+      const res = await fetch(this.dataUrl);
+      this.azkarData = await res.json();
+    } catch (error) {
+      console.error("حدث خطأ أثناء جلب الأذكار:", error);
+      this.DOM.content.innerHTML = `<p style="text-align:center; color:red;">تعذر تحميل الأذكار. تأكد من اتصالك أو صحة الملف.</p>`;
+    }
+  }
+
+  // ربط أزرار القائمة الرئيسية والسحب
+  initEvents() {
+    this.DOM.btnSabah.addEventListener("click", () =>
+      this.startSession("azkarsabah", "أذكار الصباح"),
+    );
+    this.DOM.btnMasa.addEventListener("click", () =>
+      this.startSession("azkarmasa", "أذكار المساء"),
+    );
+    this.DOM.btnBack.addEventListener("click", () => this.showHomeScreen());
+
+    document.addEventListener("touchstart", (e) => {
+      this.touchStartX = e.changedTouches[0].screenX;
     });
-}
 
-// Azkar Sabah
-async function getAzkarSabah() {
-  const content = document.querySelector(".content");
-  const res = await fetch(azkarUrl);
-  const data = await res.json();
+    document.addEventListener("touchend", (e) => {
+      this.touchEndX = e.changedTouches[0].screenX;
+      this.handleSwipe();
+    });
+  }
 
-  content.innerHTML = `
-    ${data.azkarsabah
-      .map(
-        (azkar) => `
-        <div class="card" data-max-count="${azkar.count}">
-            <h3>${azkar.content}</h3>
-            <p>${azkar.description}</p>
-            <button class="increment-btn">${azkar.count}</button>
-        </div>`
-      )
-      .join("")}
-    `;
+  startSession(type, title) {
+    if (!this.azkarData || !this.azkarData[type]) return;
 
-  // إضافة تأثير الـ scale عند الضغط
-  const cards = document.querySelectorAll(".card");
-  cards.forEach((card) => {
-    const incrementButton = card.querySelector(".increment-btn");
-    let count = parseInt(incrementButton.textContent);
+    this.currentType = type;
+    this.currentList = this.azkarData[type];
+    this.DOM.azkarTitle.textContent = title;
 
-    card.addEventListener("click", () => {
+    this.findNextIncompleteZikr();
+
+    this.DOM.homeScreen.classList.remove("active");
+    this.DOM.azkarScreen.classList.add("active");
+
+    this.renderSingleZikr();
+  }
+
+  showHomeScreen() {
+    this.DOM.azkarScreen.classList.remove("active");
+    this.DOM.homeScreen.classList.add("active");
+    this.currentType = "";
+    this.currentList = [];
+  }
+
+  // جلب مفتاح التخزين الآمن (يفضل وجود id في ملف json، وإلا نستخدم الفهرس مؤقتاً)
+  getStorageKey(index) {
+    const item = this.currentList[index];
+    return item.id ? `azkar_${item.id}` : `azkar_${this.currentType}_${index}`;
+  }
+
+  findNextIncompleteZikr() {
+    for (let i = 0; i < this.currentList.length; i++) {
+      const savedCount = localStorage.getItem(this.getStorageKey(i));
+      if (savedCount === null || parseInt(savedCount) > 0) {
+        this.currentIndex = i;
+        return;
+      }
+    }
+    this.currentIndex = this.currentList.length;
+  }
+
+  renderSingleZikr() {
+    if (this.currentIndex >= this.currentList.length) {
+      this.DOM.content.innerHTML = `
+                <div class="card" style="text-align: center;">
+                    <h3>تقبل الله طاعتكم ✨</h3>
+                    <p>لقد أتممت جميع أذكار هذا الوقت.</p>
+                    <button class="primary-btn" onclick="app.resetAzkar()" style="margin: 1rem auto; padding: 0.5rem 2rem;">إعادة البدء</button>
+                </div>
+            `;
+      return;
+    }
+
+    const azkar = this.currentList[this.currentIndex];
+    const storageKey = this.getStorageKey(this.currentIndex);
+    const savedCount = localStorage.getItem(storageKey);
+    const currentCount =
+      savedCount !== null ? parseInt(savedCount) : parseInt(azkar.count);
+
+    this.DOM.content.innerHTML = `
+            <div class="card" id="active-card">
+                <span class="progress-text">الذكر ${this.currentIndex + 1} من ${this.currentList.length}</span>
+                <h3>${azkar.content}</h3>
+                <p>${azkar.description}</p>
+                <button class="increment-btn" id="counter-btn">${currentCount}</button>
+                
+                <div class="navigation-btns">
+                    <button class="nav-btn" onclick="app.nextZikr()">التالي ←</button>
+                    ${this.currentIndex > 0 ? `<button class="nav-btn" onclick="app.prevZikr()">→ السابق</button>` : `<div></div>`}
+                </div>
+            </div>
+        `;
+
+    this.attachCardInteraction(currentCount, storageKey);
+  }
+
+  attachCardInteraction(initialCount, storageKey) {
+    const card = document.getElementById("active-card");
+    const btn = document.getElementById("counter-btn");
+    let count = initialCount;
+
+    if (count === 0) {
+      btn.disabled = true;
+      btn.innerHTML = "✓";
+      return;
+    }
+
+    card.addEventListener("click", (e) => {
+      if (e.target.classList.contains("nav-btn")) return;
+
       if (count > 0) {
         count--;
-        incrementButton.textContent = count;
-        incrementButton.style.borderColor = "rgb(254, 98, 39, 255)";
+        btn.textContent = count;
+        localStorage.setItem(storageKey, count);
 
-        // تأثير Scale عند الضغط
-        card.style.transition = "transform 0.15s ease";
-        card.style.transform = "scale(0.9)";
-        setTimeout(() => {
-          card.style.transform = "scale(1)";
-        }, 150);
+        if (navigator.vibrate) navigator.vibrate(50);
+
+        // تأثير بصري للضغط
+        card.style.transform = "scale(0.98)";
+        setTimeout(() => (card.style.transform = "scale(1)"), 150);
 
         if (count === 0) {
-          card.style.cursor = "not-allowed";
-          card.style.opacity = "0.5";
+          btn.disabled = true;
+          btn.innerHTML = "✓";
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+          setTimeout(() => {
+            this.nextZikr();
+          }, 800);
         }
       }
     });
-  });
-}
-getAzkarSabah();
+  }
 
+  nextZikr() {
+    this.currentIndex++;
+    this.renderSingleZikr();
+  }
 
-// Azkar Masah
-async function getAzkarMasa() {
-  const content = document.querySelector(".content");
-  const res = await fetch(azkarUrl);
-  const data = await res.json();
+  prevZikr() {
+    if (this.currentIndex > 0) {
+      this.currentIndex--;
+      this.renderSingleZikr();
+    }
+  }
 
-  content.innerHTML = `
-    ${data.azkarmasa
-      .map(
-        (azkar) => `
-        <div class="card" data-max-count="${azkar.count}">
-            <h3>${azkar.content}</h3>
-            <p>${azkar.description}</p>
-            <button class="increment-btn">${azkar.count}</button>
-        </div>`
-      )
-      .join("")}
-    `;
+  resetAzkar() {
+    for (let i = 0; i < this.currentList.length; i++) {
+      localStorage.removeItem(this.getStorageKey(i));
+    }
+    this.currentIndex = 0;
+    this.renderSingleZikr();
+  }
 
-  // إضافة تأثير الـ scale عند الضغط
-  const cards = document.querySelectorAll(".card");
-  cards.forEach((card) => {
-    const incrementButton = card.querySelector(".increment-btn");
-    let count = parseInt(incrementButton.textContent);
+  handleSwipe() {
+    // لا تنفذ السحب إذا لم نكن في شاشة الأذكار
+    if (!this.DOM.azkarScreen.classList.contains("active")) return;
 
-    card.addEventListener("click", () => {
-      if (count > 0) {
-        count--;
-        incrementButton.textContent = count;
-        incrementButton.style.borderColor = "rgb(254, 98, 39, 255)";
+    const swipeDistance = this.touchEndX - this.touchStartX;
+    if (Math.abs(swipeDistance) < this.minSwipeDistance) return;
 
-        // تأثير Scale عند الضغط
-        card.style.transition = "transform 0.15s ease";
-        card.style.transform = "scale(0.9)";
-        setTimeout(() => {
-          card.style.transform = "scale(1)";
-        }, 150);
-
-        if (count === 0) {
-          card.style.cursor = "not-allowed";
-          card.style.opacity = "0.5";
-        }
-      }
-    });
-  });
-}
-getAzkarMasa();
-
-
-// تسجيل خدمة العمال
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-        .then(registration => {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        })
-        .catch(error => {
-            console.log('ServiceWorker registration failed: ', error);
-        });
+    // بسبب (dir="rtl") السحب أصبح معكوساً منطقياً
+    if (swipeDistance > 0) {
+      this.nextZikr(); // سحب لليمين يعرض التالي
+    } else {
+      this.prevZikr(); // سحب لليسار يعرض السابق
+    }
+  }
 }
 
-// إرسال الإشعارات في الأوقات المحددة
-function scheduleNotification(title, options, delay) {
-    setTimeout(() => {
-        if (Notification.permission === 'granted') {
-            navigator.serviceWorker.getRegistration().then(reg => {
-                reg.showNotification(title, options);
-            });
-        }
-    }, delay);
-}
-
-// تحديد مواعيد الإشعارات
-const now = new Date();
-const morningTime = new Date();
-morningTime.setHours(6, 0, 0, 0); // 6:00 AM
-const eveningTime = new Date();
-eveningTime.setHours(16, 0, 0, 0); // 6:00 PM
-
-const morningDelay = morningTime - now > 0 ? morningTime - now : morningTime - now + 24 * 60 * 60 * 1000;
-const eveningDelay = eveningTime - now > 0 ? eveningTime - now : eveningTime - now + 24 * 60 * 60 * 1000;
-
-scheduleNotification('موعد أذكار الصباح', { body: 'حان الآن موعد أذكار الصباح.' }, morningDelay);
-scheduleNotification('موعد أذكار المساء', { body: 'حان الآن موعد أذكار المساء.' }, eveningDelay);
+// تعريف التطبيق عالمياً لتتمكن الأزرار المضمنة في HTML من استدعائه (مثل app.nextZikr)
+let app;
+document.addEventListener("DOMContentLoaded", async () => {
+  app = new AzkarApp("./azkar.json");
+  await app.init();
+});

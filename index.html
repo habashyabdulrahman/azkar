@@ -1,42 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
-    <title>
-        ألاذكار
-    </title>
+    <title>الأذكار</title>
     <link rel="shortcut icon" href="assets/mosque.png" type="image/x-icon">
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
     <main class="container">
         <nav>
-            <a class="logo" href="/azkar">وَذَكِّرْ فَإِنَّ الذِّكْرَىٰ تَنفَعُ الْمُؤْمِنِينَ</a>
-            <div class="link">
-                <button><a href="azkar-sabah.html">أذكار الصباح</a></button>
-                <button><a href="azkar-masa.html">أذكار المساء</a></button>
-            </div>
+            <a class="logo" href="#" onclick="location.reload()">وَذَكِّرْ فَإِنَّ الذِّكْرَىٰ تَنفَعُ الْمُؤْمِنِينَ</a>
         </nav>
+
+        <div id="home-screen" class="screen active">
+            <p>
+                قال الله تعالى: (فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ) [البقرة: 152]... 
+                ذكر الله تعالى عبادةٌ عظيمة وسهلة وخفيفة.
+            </p>
+            <div class="menu-links">
+                <button id="btn-sabah" class="primary-btn">أذكار الصباح</button>
+                <button id="btn-masa" class="primary-btn">أذكار المساء</button>
+            </div>
+        </div>
+
+        <div id="azkar-screen" class="screen">
+            <div class="screen-header">
+                <h1 id="azkar-title">الأذكار</h1>
+                <button id="btn-back" class="text-btn">← عودة للقائمة</button>
+            </div>
+            <div class="content"></div>
+        </div>
         
         <footer>❤️ صدقة جارية</footer>
     </main>
     
     <script src="main.js"></script>
-<script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(registration => {
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            })
-            .catch(error => {
-                console.log('ServiceWorker registration failed: ', error);
-            });
-    }
-</script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => console.log('SW registered'))
+                .catch(err => console.log('SW error: ', err));
+        }
+    </script>
 </body>
-
 </html>

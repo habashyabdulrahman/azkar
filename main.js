@@ -72,10 +72,21 @@ class AzkarApp {
   }
 
   showHomeScreen() {
+    // تصفير التقدم عند العودة للقائمة الرئيسية بإرادة المستخدم
+    this.clearCurrentProgress();
+
     this.DOM.azkarScreen.classList.remove("active");
     this.DOM.homeScreen.classList.add("active");
     this.currentType = "";
     this.currentList = [];
+  }
+
+  clearCurrentProgress() {
+    if (!this.currentList) return;
+    for (let i = 0; i < this.currentList.length; i++) {
+      localStorage.removeItem(this.getStorageKey(i));
+    }
+    this.currentIndex = 0;
   }
 
   // جلب مفتاح التخزين الآمن (يفضل وجود id في ملف json، وإلا نستخدم الفهرس مؤقتاً)
@@ -181,11 +192,8 @@ class AzkarApp {
   }
 
   resetAzkar() {
-    for (let i = 0; i < this.currentList.length; i++) {
-      localStorage.removeItem(this.getStorageKey(i));
-    }
-    this.currentIndex = 0;
-    this.renderSingleZikr();
+    this.clearCurrentProgress();
+    this.renderSingleZikr(); // إعادة الرسم من البداية
   }
 
   handleSwipe() {
